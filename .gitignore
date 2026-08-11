@@ -5,7 +5,14 @@ node_modules/
 
 # Environment variables — NEVER commit this!
 .env
+.env.*
+*.env
 server/.env
+.dev.vars
+*.dev.vars
+server/.dev.vars
+.wrangler/
+server/.wrangler/
 
 # Build outputs
 dist/

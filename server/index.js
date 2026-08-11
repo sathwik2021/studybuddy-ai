@@ -1,32 +1,39 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const chatRoutes = require('./routes/chat');
+import { Hono } from 'hono';
+import { cors } from 'hono/cors';
+import chatApp from './routes/chat.js';
 
-const app = express();
-const PORT = process.env.PORT || 3001;
+const app = new Hono();
 
-// Middleware
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
-app.use(express.json({ limit: '10mb' }));
+// CORS Middleware
+app.use('*', async (c, next) => {
+  const clientUrl = c.env?.CLIENT_URL || 'http://localhost:5173';
+  const corsMiddleware = cors({
+    origin: (origin) => {
+      if (!origin || origin === clientUrl || origin === 'http://localhost:5173' || origin.includes('pages.dev')) {
+        return origin || '*';
+      }
+      return origin;
+    },
+    allowMethods: ['GET', 'POST', 'OPTIONS'],
+    allowHeaders: ['Content-Type', 'Authorization'],
+  });
+  return corsMiddleware(c, next);
+});
 
-// Routes
-app.use('/api', chatRoutes);
+// Health Check Endpoints
+app.get('/health', (c) => c.json({ status: 'ok', service: 'StudyBuddy AI Worker' }));
+app.get('/', (c) => c.json({ status: 'ok', service: 'StudyBuddy AI Worker' }));
 
-// Health check
-app.get('/health', (req, res) => res.json({ status: 'ok', service: 'StudyBuddy AI Server' }));
+// Mount /api routes
+app.route('/api', chatApp);
 
-// 404
-app.use((req, res) => res.status(404).json({ error: 'Endpoint not found' }));
+// 404 Not Found Handler
+app.notFound((c) => c.json({ error: 'Endpoint not found' }, 404));
 
-// Global error handler
-app.use((err, req, res, next) => {
+// Global Error Handler
+app.onError((err, c) => {
   console.error('Unhandled error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  return c.json({ error: 'Internal server error' }, 500);
 });
 
-app.listen(PORT, () => {
-  console.log(`\n🎓 StudyBuddy AI Server running on http://localhost:${PORT}`);
-  console.log(`📡 OpenRouter API key: ${process.env.OPENROUTER_API_KEY ? '✅ Configured' : '❌ MISSING — add to .env'}`);
-  console.log(`🌐 Accepting requests from: ${process.env.CLIENT_URL || 'http://localhost:5173'}\n`);
-});
+export default app;

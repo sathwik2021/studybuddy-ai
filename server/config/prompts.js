@@ -1,6 +1,6 @@
 // System prompts for each StudyBuddy AI mode
 
-const SYSTEM_PROMPTS = {
+export const SYSTEM_PROMPTS = {
   explain: `You are StudyBuddy's Concept Explanation Specialist. Your job is to explain technical and academic concepts clearly and accessibly for university students.
 
 Guidelines:
@@ -69,4 +69,3 @@ Guidelines:
 - Suggest relevant follow-up questions when helpful`,
 };
 
-module.exports = { SYSTEM_PROMPTS };
