@@ -6,11 +6,19 @@ const app = new Hono();
 
 // CORS Middleware
 app.use('*', async (c, next) => {
-  const clientUrl = c.env?.CLIENT_URL || 'http://localhost:5173';
+  const clientUrl = c.env?.CLIENT_URL || '*';
   const corsMiddleware = cors({
     origin: (origin) => {
-      if (!origin || origin === clientUrl || origin === 'http://localhost:5173' || origin.includes('pages.dev')) {
-        return origin || '*';
+      if (!origin) return '*';
+      if (
+        clientUrl === '*' ||
+        origin === clientUrl ||
+        origin === 'http://localhost:5173' ||
+        origin === 'http://localhost:4173' ||
+        origin.endsWith('.pages.dev') ||
+        origin.includes('localhost')
+      ) {
+        return origin;
       }
       return origin;
     },
